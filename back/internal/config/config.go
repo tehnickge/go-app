@@ -6,32 +6,40 @@ import (
 )
 
 type Config struct {
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	DBSSLMode  string
+	DB DBConfig
+}
+
+type DBConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	Name     string
+	SSLMode  string
 }
 
 func Load() *Config {
-	cfg := &Config{
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", "postgres"),
-		DBName:     getEnv("DB_NAME", "app_db"),
-		DBSSLMode:  getEnv("DB_SSLMODE", "disable"),
+	return &Config{
+		DB: loadDBConfig(),
 	}
+}
 
-	return cfg
+func loadDBConfig() DBConfig {
+	return DBConfig{
+		Host:     getEnv("DB_HOST", "localhost"),
+		Port:     getEnv("DB_PORT", "5432"),
+		User:     getEnv("DB_USER", "postgres"),
+		Password: getEnv("DB_PASSWORD", "postgres"),
+		Name:     getEnv("DB_NAME", "app_db"),
+		SSLMode:  getEnv("DB_SSLMODE", "disable"),
+	}
 }
 
 func getEnv(key, fallback string) string {
-	val := os.Getenv(key)
-	if val == "" {
-		log.Printf("env %s not set, using default", key)
-		return fallback
+	if val, ok := os.LookupEnv(key); ok {
+		return val
 	}
-	return val
+
+	log.Printf("env %s not set, using default: %s", key, fallback)
+	return fallback
 }
