@@ -2,43 +2,34 @@ package main
 
 import (
 	"log"
+	"net/http"
 
-	"backend-app/internal/domain"
 	"backend-app/internal/config"
+	"backend-app/internal/migrations"
 	"backend-app/pkg/db"
-	"gorm.io/gorm"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func main() {
+	// Загружаем конфиг
 	cfg := config.Load()
+
+	// Подключаемся к базе
 	database, err := db.NewPostgres(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Создаём ENUM тип для пользователей
-	createUserStatusEnum(database)
+	// Запускаем миграции
+	migrations.RunMigrations(database)
 
-	// Миграции
-	err = database.AutoMigrate(
-		&domain.User{},
-		&domain.Group{},
-		&domain.Role{},
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// Router
+	r := chi.NewRouter()
+	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("pong"))
+	})
 
-	log.Println("Migration completed successfully!")
-}
-
-func createUserStatusEnum(db *gorm.DB) {
-	db.Exec(`
-	DO $$
-	BEGIN
-	    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_status') THEN
-	        CREATE TYPE user_status AS ENUM ('active', 'banned', 'deleted');
-	    END IF;
-	END$$;
-	`)
+	log.Println("server running on :8080")
+	http.ListenAndServe(":8080", r)
 }
