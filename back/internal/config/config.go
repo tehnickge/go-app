@@ -6,7 +6,8 @@ import (
 )
 
 type Config struct {
-	DB DBConfig
+	DB  DBConfig
+	JWT JWTConfig
 }
 
 type DBConfig struct {
@@ -18,9 +19,15 @@ type DBConfig struct {
 	SSLMode  string
 }
 
+type JWTConfig struct {
+	Secret string
+	TTL string
+}
+
 func Load() *Config {
 	return &Config{
-		DB: loadDBConfig(),
+		DB:  loadDBConfig(),
+		JWT: loadJWTConfig(),
 	}
 }
 
@@ -42,4 +49,11 @@ func getEnv(key, fallback string) string {
 
 	log.Printf("env %s not set, using default: %s", key, fallback)
 	return fallback
+}
+
+func loadJWTConfig() JWTConfig {
+	return JWTConfig{
+		Secret: getEnv("JWT_SECRET", "change_me"),
+		TTL:    getEnv("JWT_TTL", "24h"),
+	}
 }

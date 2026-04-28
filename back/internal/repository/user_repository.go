@@ -31,3 +31,20 @@ func (r *UserRepository) SoftDelete(userID string) error {
 			"deleted_at": gorm.Expr("NOW()"),
 		}).Error
 }
+
+func (r *UserRepository) GetByID(id string) (*domain.User, error) {
+	var user domain.User
+	err := r.db.Where("id = ? AND status != ?", id, "deleted").First(&user).Error
+	return &user, err
+}
+
+func (r *UserRepository) List() ([]*domain.User, error) {
+	var users []*domain.User
+	err := r.db.Where("status != ?", "deleted").Find(&users).Error
+	return users, err
+}
+
+func (r *UserRepository) UpdateFields(userID string, fields map[string]interface{}) error {
+	// update fields for non-deleted users only
+	return r.db.Model(&domain.User{}).Where("id = ? AND status != ?", userID, "deleted").Updates(fields).Error
+}

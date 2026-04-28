@@ -27,3 +27,14 @@ func (r *GroupRepository) SoftDelete(id string) error {
 	return r.db.Model(&domain.Group{}).Where("id = ?", id).
 		Update("deleted_at", gorm.Expr("NOW()")).Error
 }
+
+func (r *GroupRepository) List() ([]*domain.Group, error) {
+	var groups []*domain.Group
+	err := r.db.Where("deleted_at IS NULL").Find(&groups).Error
+	return groups, err
+}
+
+func (r *GroupRepository) UpdateFields(groupID string, fields map[string]interface{}) error {
+	return r.db.Model(&domain.Group{}).Where("id = ? AND deleted_at IS NULL", groupID).
+		Updates(fields).Error
+}

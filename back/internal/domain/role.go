@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type Role struct {
@@ -12,6 +13,7 @@ type Role struct {
 	Description string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
 
 	UserRoles []*UsersRoles `gorm:"foreignKey:RoleID"`
 }
